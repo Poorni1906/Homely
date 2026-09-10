@@ -4,8 +4,8 @@ import { ArrowRight, ShieldCheck, Users, Home } from "lucide-react";
 import Language from "./pages/Language";
 import RoleSelection from "./pages/RoleSelection";
 import CustomerLogin from "./pages/CustomerLogin";
-import CustomerRegister from "./pages/customerRegister"
-import CustomerHome from "./pages/customerHome_temp.jsx";
+import CustomerRegister from "./pages/customerRegister";
+import CustomerHome from "./pages/customerHome.jsx";
 import ServiceCategory from "./pages/ServiceCategory";
 import AIAssistant from "./pages/AIAssistant";
 import Booking from "./pages/Booking";
@@ -66,38 +66,41 @@ function App() {
     );
   }
 
- /* =========================
-   CUSTOMER LOGIN
-========================= */
+  /* =========================
+     CUSTOMER LOGIN
+  ========================= */
 
-if (screen === "customer-login") {
-  return (
-    <CustomerLogin
-      language={language}
-      onBack={() => setScreen("role")}
-      onLogin={() => setScreen("customer-home")}
-      onCreateAccount={() => {
-        setScreen("customer-register");
-      }}
-    />
-  );
-}
+  if (screen === "customer-login") {
+    return (
+      <CustomerLogin
+        language={language}
+        onBack={() => setScreen("role")}
+        onLogin={() => setScreen("customer-home")}
+        onCreateAccount={() => {
+          setScreen("customer-register");
+        }}
+      />
+    );
+  }
 
-if (screen === "customer-register") {
-  return (
-    <CustomerRegister
-      language={language}
-      onBack={() => {
-        setScreen("customer-login");
-      }}
-      onRegister={(customerData) => {
-        console.log("Customer registration:", customerData);
+  /* =========================
+     CUSTOMER REGISTER
+  ========================= */
 
-        setScreen("customer-home");
-      }}
-    />
-  );
-}
+  if (screen === "customer-register") {
+    return (
+      <CustomerRegister
+        language={language}
+        onBack={() => {
+          setScreen("customer-login");
+        }}
+        onRegister={(customerData) => {
+          console.log("Customer registration:", customerData);
+          setScreen("customer-home");
+        }}
+      />
+    );
+  }
 
   /* =========================
      CUSTOMER HOME
@@ -107,28 +110,27 @@ if (screen === "customer-register") {
     return (
       <CustomerHome
         language={language}
-
         onOpenAI={() => {
           setScreen("ai");
         }}
-          onOpenBookings={() => {
-  setScreen("bookings");
-}}
-onOpenFavorites={() => {
-  setScreen("favorites");
-}}
-onOpenProfile={() => {
-  setScreen("profile");
-}}
-
-
+        onOpenBookings={() => {
+          setScreen("bookings");
+        }}
+        onOpenFavorites={() => {
+          setScreen("favorites");
+        }}
+        onOpenProfile={() => {
+          setScreen("profile");
+        }}
         onSelectCategory={(categoryId) => {
           const category = services.find(
             (item) => item.id === categoryId
           );
 
-          setSelectedCategory(category);
-          setScreen("service-category");
+          if (category) {
+            setSelectedCategory(category);
+            setScreen("service-category");
+          }
         }}
       />
     );
@@ -142,11 +144,9 @@ onOpenProfile={() => {
     return (
       <AIAssistant
         language={language}
-
         onBack={() => {
           setScreen("customer-home");
         }}
-
         onSelectService={(serviceId) => {
           const category = services.find(
             (item) => item.id === serviceId
@@ -166,146 +166,160 @@ onOpenProfile={() => {
   ========================= */
 
   if (screen === "service-category") {
-  return (
-    <ServiceCategory
-  category={selectedCategory}
+    return (
+      <ServiceCategory
+        category={selectedCategory}
+        favorites={favorites}
+        onToggleFavorite={(service) => {
+          setFavorites((currentFavorites) => {
+            const exists = currentFavorites.some(
+              (favorite) => favorite.id === service
+            );
 
-  favorites={favorites}
+            if (exists) {
+              return currentFavorites.filter(
+                (favorite) => favorite.id !== service
+              );
+            }
 
-  onToggleFavorite={(service) => {
-    setFavorites((currentFavorites) => {
-      const exists = currentFavorites.some(
-        (favorite) => favorite.id === service
-      );
+            return [
+              ...currentFavorites,
+              {
+                id: service,
+                service: service,
+                category: selectedCategory.title,
+                image: selectedCategory.image,
+              },
+            ];
+          });
+        }}
+        onBack={() => {
+          setScreen("customer-home");
+        }}
+        onBookService={(service) => {
+          setSelectedService(service);
+          setScreen("booking");
+        }}
+      />
+    );
+  }
 
-      if (exists) {
-        return currentFavorites.filter(
-          (favorite) => favorite.id !== service
-        );
-      }
+  /* =========================
+     BOOKING
+  ========================= */
 
-      return [
-        ...currentFavorites,
-        {
-          id: service,
-          service: service,
-          category: selectedCategory.title,
-          image: selectedCategory.image,
-        },
-      ];
-    });
-  }}
+  if (screen === "booking") {
+    return (
+      <Booking
+        service={selectedService}
+        category={selectedCategory}
+        onBack={() => {
+          setScreen("service-category");
+        }}
+        onContinue={(data) => {
+          const newBooking = {
+            ...data,
+            image: selectedCategory?.image,
+            bookingId:
+              "HM-" +
+              Math.floor(100000 + Math.random() * 900000),
+          };
 
-  onBack={() => {
-    setScreen("customer-home");
-  }}
-      onBookService={(service) => {
-        setSelectedService(service);
-        setScreen("booking");
-      }}
-    />
-  );
-}
+          setPaymentBooking(newBooking);
+          setScreen("payment");
+        }}
+      />
+    );
+  }
 
-if (screen === "booking") {
-  return (
-    <Booking
-      service={selectedService}
-      category={selectedCategory}
-      onBack={() => {
-        setScreen("service-category");
-      }}
-      onContinue={(data) => {
+  /* =========================
+     PAYMENT
+  ========================= */
 
-        const newBooking = {
-          ...data,
-          image: selectedCategory.image,
-          bookingId:
-            "HM-" +
-            Math.floor(100000 + Math.random() * 900000),
-        };
+  if (screen === "payment") {
+    return (
+      <Payment
+        booking={paymentBooking}
+        onBack={() => {
+          setScreen("booking");
+        }}
+        onPaymentSuccess={() => {
+          setBookingData(paymentBooking);
+          setScreen("booking-confirmation");
+        }}
+      />
+    );
+  }
 
-        setPaymentBooking(newBooking);
-        setScreen("payment");
-      }}
-    />
-  );
-}
-if (screen === "payment") {
-  return (
-    <Payment
-      booking={paymentBooking}
-      onBack={() => {
-        setScreen("booking");
-      }}
-      onPaymentSuccess={() => {
-        setBookingData(paymentBooking);
-        setScreen("booking-confirmation");
-      }}
-    />
-  );
-}
+  /* =========================
+     BOOKING CONFIRMATION
+  ========================= */
+
   if (screen === "booking-confirmation") {
-  return (
-    <BookingConfirmation
-      booking={bookingData}
-      onBackHome={() => {
-        setScreen("customer-home");
-      }}
-    />
-  );
-}
-if (screen === "booking-confirmation") {
-  return (
-    <BookingConfirmation
-      booking={bookingData}
-      onBackHome={() => {
-        setScreen("customer-home");
-      }}
-    />
-  );
-}
+    return (
+      <BookingConfirmation
+        booking={bookingData}
+        onBackHome={() => {
+          setScreen("customer-home");
+        }}
+      />
+    );
+  }
 
-if (screen === "bookings") {
-  return (
-    <Bookings
-      bookings={bookingData ? [bookingData] : []}
-      onBackHome={() => {
-        setScreen("customer-home");
-      }}
-    />
-  );
-}
-if (screen === "profile") {
-  return (
-    <Profile
-      language={language}
-      onBackHome={() => {
-        setScreen("customer-home");
-      }}
-      onLogout={() => {
-        setScreen("customer-login");
-      }}
-    />
-  );
-}
-if (screen === "favorites") {
-  return (
-    <Favorites
-      favorites={favorites}
-      onBackHome={() => {
-        setScreen("customer-home");
-      }}
-      onRemoveFavorite={(id) => {
-        setFavorites((currentFavorites) =>
-          currentFavorites.filter(
-            (favorite) => favorite.id !== id
-          )
-        );
-      }}
-    />
-  );
-}
+  /* =========================
+     BOOKINGS
+  ========================= */
+
+  if (screen === "bookings") {
+    return (
+      <Bookings
+        bookings={bookingData ? [bookingData] : []}
+        onBackHome={() => {
+          setScreen("customer-home");
+        }}
+      />
+    );
+  }
+
+  /* =========================
+     PROFILE
+  ========================= */
+
+  if (screen === "profile") {
+    return (
+      <Profile
+        language={language}
+        onBackHome={() => {
+          setScreen("customer-home");
+        }}
+        onLogout={() => {
+          setScreen("customer-login");
+        }}
+      />
+    );
+  }
+
+  /* =========================
+     FAVORITES
+  ========================= */
+
+  if (screen === "favorites") {
+    return (
+      <Favorites
+        favorites={favorites}
+        onBackHome={() => {
+          setScreen("customer-home");
+        }}
+        onRemoveFavorite={(id) => {
+          setFavorites((currentFavorites) =>
+            currentFavorites.filter(
+              (favorite) => favorite.id !== id
+            )
+          );
+        }}
+      />
+    );
+  }
 
   /* =========================
      WELCOME SCREEN
@@ -314,11 +328,11 @@ if (screen === "favorites") {
   return (
     <div className="app">
 
+      {/* Background */}
       <div className="background-shape shape-one"></div>
       <div className="background-shape shape-two"></div>
 
       {/* TOP BAR */}
-
       <header className="top-bar">
 
         <div className="logo">
@@ -347,47 +361,34 @@ if (screen === "favorites") {
       </header>
 
       {/* MAIN CONTENT */}
-
       <main className="welcome-container">
 
         <section className="welcome-content">
 
           <div className="small-badge">
-
             <ShieldCheck size={16} />
-
             Trusted home services
-
           </div>
 
           <h2>
-
             Help for your home,
-
             <br />
-
             <span>
               whenever you need it.
             </span>
-
           </h2>
 
           <p className="description">
-
             Find trusted local professionals for your home
             services — simple, safe and stress-free.
-
           </p>
 
           <button
             className="get-started"
             onClick={() => setScreen("language")}
           >
-
             Get Started
-
             <ArrowRight size={21} />
-
           </button>
 
           <div className="trust-points">
@@ -395,13 +396,10 @@ if (screen === "favorites") {
             <div className="trust-item">
 
               <div className="trust-icon">
-
                 <ShieldCheck size={19} />
-
               </div>
 
               <div>
-
                 <strong>
                   Trusted
                 </strong>
@@ -409,7 +407,6 @@ if (screen === "favorites") {
                 <span>
                   Verified workers
                 </span>
-
               </div>
 
             </div>
@@ -417,13 +414,10 @@ if (screen === "favorites") {
             <div className="trust-item">
 
               <div className="trust-icon">
-
                 <Users size={19} />
-
               </div>
 
               <div>
-
                 <strong>
                   Local
                 </strong>
@@ -431,7 +425,6 @@ if (screen === "favorites") {
                 <span>
                   People near you
                 </span>
-
               </div>
 
             </div>
@@ -441,31 +434,23 @@ if (screen === "favorites") {
         </section>
 
         {/* HOUSE ILLUSTRATION */}
-
         <section className="house-section">
 
           <div className="sun"></div>
 
           <div className="cloud cloud-one"></div>
-
           <div className="cloud cloud-two"></div>
 
           <div className="house-scene">
 
             <div className="tree tree-left">
-
               <div className="tree-top"></div>
-
               <div className="tree-trunk"></div>
-
             </div>
 
             <div className="tree tree-right">
-
               <div className="tree-top"></div>
-
               <div className="tree-trunk"></div>
-
             </div>
 
             <div className="house">
@@ -475,25 +460,17 @@ if (screen === "favorites") {
               <div className="house-body">
 
                 <div className="window window-left">
-
                   <div></div>
-
                   <div></div>
-
                 </div>
 
                 <div className="door">
-
                   <div className="door-handle"></div>
-
                 </div>
 
                 <div className="window window-right">
-
                   <div></div>
-
                   <div></div>
-
                 </div>
 
               </div>
@@ -503,9 +480,7 @@ if (screen === "favorites") {
             <div className="path"></div>
 
             <div className="flower flower-one"></div>
-
             <div className="flower flower-two"></div>
-
             <div className="flower flower-three"></div>
 
           </div>
@@ -515,9 +490,7 @@ if (screen === "favorites") {
       </main>
 
       <footer className="bottom-text">
-
         Simple • Safe • Community powered
-
       </footer>
 
     </div>
