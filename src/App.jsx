@@ -5,7 +5,7 @@ import Language from "./pages/Language";
 import RoleSelection from "./pages/RoleSelection";
 import CustomerLogin from "./pages/CustomerLogin";
 import CustomerRegister from "./pages/customerRegister";
-import CustomerHome from "./pages/customerHome.jsx";
+import CustomerHome from "./pages/customerHome";
 import ServiceCategory from "./pages/ServiceCategory";
 import AIAssistant from "./pages/AIAssistant";
 import Booking from "./pages/Booking";
