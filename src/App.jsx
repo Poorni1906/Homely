@@ -3,7 +3,7 @@ import { ArrowRight, ShieldCheck, Users, Home } from "lucide-react";
 
 import Language from "./pages/Language";
 import RoleSelection from "./pages/RoleSelection";
-import CustomerLogin from "./pages/customerLogin";
+import CustomerLogin from "./pages/CustomerLogin";
 import CustomerRegister from "./pages/customerRegister";
 import CustomerHome from "./pages/CustomerHome";
 import ServiceCategory from "./pages/ServiceCategory";
